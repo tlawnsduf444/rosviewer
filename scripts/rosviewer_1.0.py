@@ -11,10 +11,10 @@ import os
 import sys
 import subprocess
 import time
-abc = 1
+
 NAME = 'rostopic'
 echo = ''
-a = 1
+
 #----------makelist----------#
 def makelist(result):
 	result_tmp = list()
