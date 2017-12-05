@@ -343,7 +343,8 @@ topiclist = makelist(result)
 
 subFlag = False
 recordFlag = False
-recordcnt = topiclist[:]
+recordcnt = list()
+baglist = topiclist[:]
 filelist = ''
 bag_data = {}
 
@@ -353,24 +354,36 @@ app.setLocation("CENTER")
 
 location = os.getcwd()+'/bagging/'
 
-for i in range(len(topiclist)):
-	recordcnt[i] = 0
-	
+for i in range(len(baglist)):
+	real_bag = ''
+	recordcnt.append(0)
+	baglist[i] = baglist[i][1:]
+	for j in range(len(baglist[i])):
+		if baglist[i][j] == '/':
+			real_bag = ''
+			continue
+		real_bag += baglist[i][j]
+	baglist[i] = real_bag
+	baglist[i] = '['+ str(i) + '] ' + baglist[i] + '.txt'
 
+try:
+	os.mkdir('bagging')
+except:
+	pass
+
+baglistforauto = baglist[:]
 #----------TAP1----------#
 def pressTopic(topicecho):
-	global subFlag
-	global recordtopic
+	global subFlag, recordtopic
 	recordtopic = topicecho[1:]
 	if subFlag is True:
 		global sub
 		sub.unregister()
 	_rostopic_echo(topicecho, CallbackEcho(topicecho, None))
-	app.setPollTime(100)
 	app.registerEvent(setlabeltopic)
 	subFlag = True
 
-def Search():
+def SearchTopic():
 	text = '#' + app.getEntry("e1")
 	topicsearch = topiclist[:]
 	for i in range(len(topiclist)):
@@ -394,26 +407,19 @@ def pressrecord(Record):
 
 def record():
 	global recordcnt, recordFlag, recordtopic
-	real_record = ''
 	if recordFlag == True:
 		try:
-			for i in range(len(recordtopic)):
-				if recordtopic[i] == '/':
-					real_record = ''
-					continue
-				real_record += recordtopic[i]
-			
-			filet = open(location + str(topiclist.index('/'+recordtopic))+" - "+real_record+".txt", 'a')
+			filet = open(location + baglist[topiclist.index('/'+recordtopic)], 'a')
 			filet.write("joonrecord"+str(recordcnt[topiclist.index('/'+recordtopic)])+'\n')
-			print(str(recordcnt[topiclist.index('/'+recordtopic)]))
 			filet.write(echo)
 			filet.close()
 			recordcnt[topiclist.index('/'+recordtopic)] += 1
 			app.setButton("Record", "Recording...")
+			
 		except:
 			app.warningBox("RecordError", "Please click topic first")
 			recordFlag = False
-
+			
 def pressstop(Stop):
 	global recordFlag
 	recordFlag = False
@@ -455,31 +461,33 @@ app.stopPanedFrame()
 app.stopPanedFrame()
 
 app.setPollTime(100)
-app.registerEvent(Search)
+app.registerEvent(SearchTopic)
 app.registerEvent(record)
 app.stopTab()
 #----------TAP1----------#
 
 #----------TAP2----------#
-def Search():
+def SearchBag():
 	text = '#' + app.getEntry("e2")
-	topicsearch = filelist[:]
-	for i in range(len(topiclist)):
-		topicsearch[i] = '#' + topicsearch[i]
-		if len(text) <= len(topicsearch[i]):
+	bagsearch = filelist[:]
+	for i in range(len(filelist)):
+		bagsearch[i] = '#' + bagsearch[i]
+		if len(text) <= len(bagsearch[i]):
 			for j in range(len(text)):
-				if topicsearch[i][j] == text[j]:
-					app.showButton(topiclist[i])
+				if bagsearch[i][j] == text[j]:
+					app.showButton(filelist[i])
 				else:
-					app.hideButton(topiclist[i])
+					app.hideButton(filelist[i])
 					break
 		else:
-			app.hideButton(topiclist[i])
+			app.hideButton(filelist[i])
 			
 def pressrm(Remove):
 	os.system("cd " + location + "&& rm -rf ./*")  
 	for i in range(len(filelist)):
 			app.hideButton(filelist[i])
+	for i in range(len(topiclist)):
+		recordcnt[i] = 0
 
 def Refresh():
 	global filelist
@@ -518,7 +526,7 @@ def setlabelbag(time):
 	global bag_name
 	num = app.getScale("time")
 	app.setLabel("Bag",bag_data[bag_name][num])
-	
+
 app.startTab("RosEchoBagging")
 app.startPanedFrameVertical("p4")
 
@@ -526,7 +534,7 @@ app.setSticky("ew")
 app.setPadding([140,10])
 app.startFrame("searchBagging")
 app.setInPadding([50,0])
-app.addAutoEntry("e2", filelist, 0, 0)
+app.addAutoEntry("e2", baglistforauto, 0, 0)
 app.setEntryDefault("e2", "Please enter your search")
 app.setInPadding([0,0])
 app.setPadding([5,0])
@@ -538,20 +546,13 @@ app.stopFrame()
 
 app.startPanedFrame("p5")
 app.startScrollPane("s3",1,0,2)
-for i in range(len(topiclist)):
-	bag = ''
-	for j in range(len(topiclist[i])):
-		if topiclist[i][j] == '/':
-			bag = ''
-			continue
-		bag += topiclist[i][j]
-	bag = str(i) +" - " + bag +".txt"
+for i in range(len(baglist)):
 	app.setPadding([10,10])
-	app.addButton(bag, pressBagging)
-	app.setButtonAlign(bag, "left")
-	app.setButtonBg(bag, "white")
-	app.setButtonFg(bag, "black")
-	app.hideButton(bag)
+	app.addButton(baglist[i], pressBagging)
+	app.setButtonAlign(baglist[i], "left")
+	app.setButtonBg(baglist[i], "white")
+	app.setButtonFg(baglist[i], "black")
+	app.hideButton(baglist[i])
 app.stopScrollPane()
 
 app.startPanedFrame("p6")
@@ -563,6 +564,7 @@ app.stopPanedFrame()
 
 app.stopPanedFrame()
 app.registerEvent(Refresh)
+app.registerEvent(SearchBag)
 app.stopTab()
 #----------TAP2----------#
 app.stopTabbedFrame()

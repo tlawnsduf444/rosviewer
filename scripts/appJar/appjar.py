@@ -10542,7 +10542,7 @@ class AutoCompleteEntry(Entry):
 
     # function to create & show an empty list box
     def makeListBox(self):
-        self.listbox = Listbox(self.topLevel, width=self["width"], height=8)
+        self.listbox = Listbox(self.topLevel, width=self["width"]*2, height=8)
         self.listbox.config(height=self.rows, bg=self.cget("bg"), selectbackground=self.cget("selectbackground"))
         self.listbox.config(fg=self.cget("fg"))
         self.listbox.bind("<Button-1>", self.mouseClickBox)
