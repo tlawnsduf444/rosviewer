@@ -344,6 +344,8 @@ topiclist = makelist(result)
 subFlag = False
 recordFlag = False
 recordcnt = topiclist[:]
+filelist = ''
+bag_data = {}
 
 app = gui("RosViewer","850x800")
 app.setBg("light gray")
@@ -353,7 +355,9 @@ location = os.getcwd()+'/bagging/'
 
 for i in range(len(topiclist)):
 	recordcnt[i] = 0
+	
 
+#----------TAP1----------#
 def pressTopic(topicecho):
 	global subFlag
 	global recordtopic
@@ -389,9 +393,7 @@ def pressrecord(Record):
 	recordFlag = True
 
 def record():
-	global recordcnt
-	global recordFlag
-	global recordtopic
+	global recordcnt, recordFlag, recordtopic
 	real_record = ''
 	if recordFlag == True:
 		try:
@@ -401,8 +403,9 @@ def record():
 					continue
 				real_record += recordtopic[i]
 			
-			filet = open(location + "("+str(topiclist.index('/'+recordtopic))+")"+real_record+".txt", 'a')
+			filet = open(location + str(topiclist.index('/'+recordtopic))+" - "+real_record+".txt", 'a')
 			filet.write("joonrecord"+str(recordcnt[topiclist.index('/'+recordtopic)])+'\n')
+			print(str(recordcnt[topiclist.index('/'+recordtopic)]))
 			filet.write(echo)
 			filet.close()
 			recordcnt[topiclist.index('/'+recordtopic)] += 1
@@ -418,11 +421,8 @@ def pressstop(Stop):
 	
 app.startTabbedFrame("TabbedFrame")
 app.setTabbedFrameTabExpand("TabbedFrame", expand=True)
-
-#----------TAP1----------#
 app.startTab("RosEchoTopic")
 app.startPanedFrameVertical("p1")
-app.setPadding([10,10])
 app.setSticky("ew")
 app.setPadding([140,10])
 app.startFrame("searchTopic")
@@ -461,9 +461,6 @@ app.stopTab()
 #----------TAP1----------#
 
 #----------TAP2----------#
-filelist = ''
-bag_data = {}
-
 def Search():
 	text = '#' + app.getEntry("e2")
 	topicsearch = filelist[:]
@@ -483,7 +480,7 @@ def pressrm(Remove):
 	os.system("cd " + location + "&& rm -rf ./*")  
 	for i in range(len(filelist)):
 			app.hideButton(filelist[i])
-			
+
 def Refresh():
 	global filelist
 	filelist = os.listdir(location)
@@ -495,29 +492,27 @@ def Refresh():
 		sys.exit()
 
 def pressBagging(Bag):
-	global filelist, bag_data, bag_name
+	global filelist, bag_name
 	bag_name = Bag
-	jooncnt = -1
-	linedata = list()
+	linecnt = -1
+	linedata = []
 	fileb = open(location + Bag, 'r')
 	line = "Made By JoonYeol"
 	
 	while line:
 		line = fileb.readline()
-		if line == 'joonrecord'+str(jooncnt+1)+'\n':
+		if line == 'joonrecord'+str(linecnt+1)+'\n':
 			linedata.append('')
-			jooncnt += 1
-		linedata[jooncnt] += line
+			linecnt += 1
+		else:
+			linedata[linecnt] += line
 	fileb.close()
 	bag_data[Bag] = linedata
 
-	app.setScaleRange("time", 0, jooncnt, curr=None)
-	app.showScaleIntervals("time", jooncnt/4)
-	app.showScaleValue("time", show=True)
-	if jooncnt == 0:
-		setlabelbag("time")
-	else:
-		app.setScaleChangeFunction("time", setlabelbag)
+	app.setScaleRange("time", 0, linecnt, curr=None)
+	app.showScaleIntervals("time", linecnt/4)
+	setlabelbag("time")
+	app.setScaleChangeFunction("time", setlabelbag)
 
 def setlabelbag(time):
 	global bag_name
@@ -527,7 +522,6 @@ def setlabelbag(time):
 app.startTab("RosEchoBagging")
 app.startPanedFrameVertical("p4")
 
-app.setPadding([10,10])
 app.setSticky("ew")
 app.setPadding([140,10])
 app.startFrame("searchBagging")
@@ -545,19 +539,19 @@ app.stopFrame()
 app.startPanedFrame("p5")
 app.startScrollPane("s3",1,0,2)
 for i in range(len(topiclist)):
-	real_bag = ''
+	bag = ''
 	for j in range(len(topiclist[i])):
 		if topiclist[i][j] == '/':
-			real_bag = ''
+			bag = ''
 			continue
-		real_bag += topiclist[i][j]
-	real_bag = "(" + str(i) +")" + real_bag +".txt"
+		bag += topiclist[i][j]
+	bag = str(i) +" - " + bag +".txt"
 	app.setPadding([10,10])
-	app.addButton(real_bag, pressBagging)
-	app.setButtonAlign(real_bag, "left")
-	app.setButtonBg(real_bag, "white")
-	app.setButtonFg(real_bag, "black")
-	app.hideButton(real_bag)
+	app.addButton(bag, pressBagging)
+	app.setButtonAlign(bag, "left")
+	app.setButtonBg(bag, "white")
+	app.setButtonFg(bag, "black")
+	app.hideButton(bag)
 app.stopScrollPane()
 
 app.startPanedFrame("p6")
