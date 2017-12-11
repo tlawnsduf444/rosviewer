@@ -1,15 +1,13 @@
 #!/usr/bin/env python
-from __future__ import division, print_function
-from operator import itemgetter
-from appJar import gui
+from __future__ import print_function
+from os.path import exists
+from os import remove
 import rospy
 import genpy
 import rosgraph
 import roslib.message
-import socket
 import os
 import sys
-import subprocess
 import time
 
 class CallbackEcho(object):
@@ -30,10 +28,32 @@ class CallbackEcho(object):
         return genpy.message.strify_message(val, indent=indent, time_offset=time_offset, current_time=current_time, field_filter=field_filter, fixed_numeric_width=fixed_numeric_width)
 
     def callback(self, data, callback_args, current_time=None):
-        topic = callback_args['topic']
-        type_information = callback_args.get('type_information', None)
-        sys.stdout.write(self.str_fn(data,current_time=current_time, field_filter=self.field_filter,type_information=type_information, fixed_numeric_width=self.fixed_numeric_width,value_transform=self.value_transform) + self.suffix + '\n')
-            
+		topic = callback_args['topic']
+		type_information = callback_args.get('type_information', None)
+		echo = self.str_fn(data,current_time=current_time,	field_filter=self.field_filter,type_information=type_information,	fixed_numeric_width=self.fixed_numeric_width,value_transform=self.value_transform) + self.suffix + '\n'
+		x = ''; y = ''; seq = ''
+		for i in range(len(echo)):
+			if echo[i] == 's' and echo[i+1] == 'e' and echo[i+2] == 'q':
+				while echo[i+5] != '\n': 
+					seq = seq + echo[i+5]; i += 1
+			if echo[i] == 'x' and echo[i+1] == ':':
+				while echo[i] != '\n': 
+					x = x + echo[i]; i += 1
+				i += 3
+				while echo[i] != '\n':
+					y = y + echo[i]; i += 1
+				break
+			
+		startp = "locations:\n"
+		with open("/home/jun/semantics/3.yaml", 'r+') as sefile:
+			lines = sefile.readlines()
+			sefile.seek(0)
+			sefile.truncate()
+			for line in lines:
+				if line.startswith(startp):
+					line = line.rstrip("\n") + "\n  Point%s:\n    name: 'sample'\n    description: 'sample description'\n    world: 'sample'\n    pose: { %s, %s, theta: 0.00}\n"%(seq,x,y)
+				sefile.write(line)
+
 def _rostopic_echo(topic, callback_echo):
     rospy.init_node('rostopic', anonymous=True)
     val = rosgraph.Master('/rostopic').getTopicTypes()
@@ -42,5 +62,7 @@ def _rostopic_echo(topic, callback_echo):
     type_information = None
     sub = rospy.Subscriber(matches[0][0], msg_class, callback_echo.callback,{'topic': topic, 'type_information': type_information})
     rospy.spin()
-    
-_rostopic_echo(topicc, CallbackEcho(topicc))
+
+topicName = '/clicked_point'
+
+_rostopic_echo(topicName, CallbackEcho(topicName))

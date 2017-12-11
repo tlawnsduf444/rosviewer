@@ -1,19 +1,14 @@
 #!/usr/bin/env python
-from __future__ import division, print_function
-from operator import itemgetter
-from appJar import gui
 import rospy
 import genpy
 import rosgraph
 import roslib.message
-import socket
 import os
 import sys
 import subprocess
-import time
+from appJar import gui
 
 echo = ''
-sub = ''
 
 #----------makelist----------#
 def makelist(result):
@@ -52,10 +47,11 @@ class CallbackEcho(object):
     def callback(self, data, callback_args, current_time=None):
         topic = callback_args['topic']
         type_information = callback_args.get('type_information', None)
-        global sub
-        sub = self.str_fn(data,current_time=current_time, field_filter=self.field_filter,type_information=type_information, fixed_numeric_width=self.fixed_numeric_width,value_transform=self.value_transform) + self.suffix + '\n'
+        global echo
+        echo = self.str_fn(data,current_time=current_time, field_filter=self.field_filter,type_information=type_information, fixed_numeric_width=self.fixed_numeric_width,value_transform=self.value_transform) + self.suffix + '\n'
             
 def _rostopic_echo(topic, callback_echo):
+    global sub
     rospy.init_node('rostopic', anonymous=True)
     val = rosgraph.Master('/rostopic').getTopicTypes()
     matches = [(t, t_type) for t, t_type in val if t == topic]
@@ -104,7 +100,7 @@ baglistforauto = baglist[:]
 def pressTopic(topicecho):
 	global subFlag, recordtopic
 	recordtopic = topicecho[1:]
-    if subFlag is True:
+	if subFlag is True:
 		global sub
 		sub.unregister()
 	_rostopic_echo(topicecho, CallbackEcho(topicecho))
@@ -219,7 +215,6 @@ def pressrm(Remove):
 
 def Refresh():
 	global filelist
-	print(sub)
 	filelist = os.listdir(location)
 	try:
 		for i in range(len(filelist)):
