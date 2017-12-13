@@ -45,7 +45,7 @@ class CallbackEcho(object):
 				break
 			
 		startp = "locations:\n"
-		with open("/home/jun/semantics/3.yaml", 'r+') as sefile:
+		with open("/home/jun/semantics/4.yaml", 'r+') as sefile:
 			lines = sefile.readlines()
 			sefile.seek(0)
 			sefile.truncate()
