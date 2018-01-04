@@ -43,9 +43,11 @@ class CallbackEcho(object):
 				while echo[i] != '\n':
 					y = y + echo[i]; i += 1
 				break
-			
+        
+		global Input
+		location = "/home/jun/semantics/" + Input + ".yaml"
 		startp = "locations:\n"
-		with open("/home/jun/semantics/4.yaml", 'r+') as sefile:
+		with open(location, 'r+') as sefile:
 			lines = sefile.readlines()
 			sefile.seek(0)
 			sefile.truncate()
@@ -63,6 +65,6 @@ def _rostopic_echo(topic, callback_echo):
     sub = rospy.Subscriber(matches[0][0], msg_class, callback_echo.callback,{'topic': topic, 'type_information': type_information})
     rospy.spin()
 
+Input = raw_input("Please write yaml name : ")
 topicName = '/clicked_point'
-
 _rostopic_echo(topicName, CallbackEcho(topicName))
