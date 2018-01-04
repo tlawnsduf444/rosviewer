@@ -45,7 +45,7 @@ class CallbackEcho(object):
 				break
         
 		global Input
-		location = "/home/jun/semantics/" + Input + ".yaml"
+		location = "/home/yujin/semantics/" + Input + ".yaml"
 		startp = "locations:\n"
 		with open(location, 'r+') as sefile:
 			lines = sefile.readlines()
